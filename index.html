@@ -3,455 +3,312 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>سرنوشت آلبیون - یک افسانه کوچک</title>
+<title>دنیای بازی‌های افسانه‌ای</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  :root{
-    --bg: #1d2b1f;
-    --panel: #2c3e2e;
-    --gold: #d4af6a;
-    --good: #6fae8f;
-    --evil: #b25c5c;
-    --ink: #f0e9da;
-    --muted: #9aab95;
-  }
-  body{
-    font-family: 'Georgia', 'Vazirmatn', serif;
-    background: radial-gradient(circle at 50% 0%, #2a3c2c, var(--bg));
-    color: var(--ink);
-    min-height:100vh;
-    display:flex; align-items:center; justify-content:center;
-    padding: 20px;
-  }
-  .game{
-    width:100%; max-width:640px;
-    background: var(--panel);
-    border: 2px solid var(--gold);
-    border-radius: 14px;
-    box-shadow: 0 0 40px rgba(0,0,0,0.5), inset 0 0 60px rgba(212,175,106,0.05);
-    overflow:hidden;
-  }
-  header{
-    text-align:center;
-    padding: 22px 16px 14px;
-    border-bottom: 2px solid rgba(212,175,106,0.3);
-    background: linear-gradient(180deg, rgba(212,175,106,0.08), transparent);
-  }
-  header h1{
-    font-size: 1.6rem;
-    letter-spacing: 2px;
-    color: var(--gold);
-  }
-  header p{ color: var(--muted); font-size:0.85rem; margin-top:4px; }
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg: #0e1a10;
+  --panel: #182318;
+  --card: #1e2f1e;
+  --gold: #d4af6a;
+  --gold2: #f0d090;
+  --good: #6fae8f;
+  --evil: #b25c5c;
+  --ink: #f0e9da;
+  --muted: #8a9e88;
+  --glow: rgba(212,175,106,0.15);
+}
+body {
+  font-family: 'Georgia', serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  .stats{
-    display:flex; justify-content:space-around;
-    padding: 12px 16px;
-    border-bottom: 1px solid rgba(212,175,106,0.15);
-    font-size: 0.9rem;
-  }
-  .stat{ text-align:center; }
-  .stat .label{ color: var(--muted); font-size:0.7rem; display:block; }
-  .stat .val{ font-weight:bold; }
-  .align-bar{
-    height:6px; border-radius:3px; background:#13201a; margin-top:4px; overflow:hidden; width:80px;
-  }
-  .align-fill{
-    height:100%; transition: width 0.4s, background 0.4s;
-  }
+/* Stars background */
+.stars {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(212,175,106,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 10%, rgba(240,208,144,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 60%, rgba(212,175,106,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 80%, rgba(240,208,144,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 70%, rgba(212,175,106,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 35% 15%, rgba(212,175,106,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 65% 85%, rgba(240,208,144,0.2) 0%, transparent 100%),
+    radial-gradient(circle at 50% 0%, #1a2e1a 0%, var(--bg) 70%);
+}
 
-  .scene{
-    padding: 22px;
-    min-height: 220px;
-  }
-  .scene-art{
-    text-align:center; font-size:3rem; margin-bottom:14px;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
-  }
-  .scene-text{
-    line-height:1.9; font-size:1.02rem; min-height: 80px;
-  }
-  .log{
-    font-size:0.8rem; color: var(--muted); margin-top:10px; font-style:italic; min-height:1.2em;
-  }
+.wrapper {
+  position: relative; z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
 
-  .choices{
-    display:flex; flex-direction:column; gap:10px;
-    padding: 0 22px 22px;
-  }
-  .choice-btn{
-    background: #20301f;
-    border: 1px solid rgba(212,175,106,0.35);
-    color: var(--ink);
-    padding: 14px 16px;
-    border-radius: 8px;
-    text-align: right;
-    font-size: 0.98rem;
-    cursor:pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .choice-btn:hover{
-    background: rgba(212,175,106,0.15);
-    border-color: var(--gold);
-    transform: translateX(-3px);
-  }
-  .choice-btn:disabled{
-    opacity:0.4; cursor:not-allowed; transform:none;
-  }
-  .choice-tag{
-    font-size:0.7rem; color: var(--gold); display:block; margin-bottom:4px; letter-spacing:1px;
-  }
+/* Header */
+.hero {
+  text-align: center;
+  margin-bottom: 48px;
+}
+.hero-badge {
+  display: inline-block;
+  border: 1px solid rgba(212,175,106,0.4);
+  color: var(--muted);
+  font-size: 0.7rem;
+  letter-spacing: 3px;
+  padding: 5px 16px;
+  border-radius: 20px;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+.hero h1 {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  color: var(--gold);
+  letter-spacing: 3px;
+  line-height: 1.2;
+  text-shadow: 0 0 40px rgba(212,175,106,0.3);
+  margin-bottom: 12px;
+}
+.hero-sub {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.divider {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 20px auto 0;
+}
 
-  .battle{
-    display:flex; justify-content:space-between; align-items:center;
-    padding: 0 22px 16px;
-  }
-  .combatant{ text-align:center; width:40%; }
-  .combatant .icon{ font-size:2.5rem; }
-  .hpbar{ height:10px; background:#13201a; border-radius:5px; overflow:hidden; margin-top:6px; border:1px solid rgba(212,175,106,0.2); }
-  .hpfill{ height:100%; background: var(--evil); transition: width 0.3s; }
-  .hpfill.player{ background: var(--good); }
-  .vs{ color: var(--gold); font-size:1.4rem; }
+/* Section title */
+.section-title {
+  font-size: 0.75rem;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.section-title::before, .section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(212,175,106,0.2);
+}
 
-  footer{
-    text-align:center; padding: 10px; font-size:0.7rem; color: var(--muted);
-    border-top: 1px solid rgba(212,175,106,0.15);
-  }
+/* Game cards */
+.games-grid {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 40px;
+}
 
-  .badge{
-    display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem;
-    background: rgba(212,175,106,0.15); color: var(--gold); margin-right:4px;
-  }
+.game-card {
+  background: var(--card);
+  border: 1px solid rgba(212,175,106,0.2);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.game-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, var(--glow), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.game-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(212,175,106,0.1);
+}
+.game-card:hover::before { opacity: 1; }
 
-  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
-  .hit{ animation: shake 0.25s; }
+.card-icon {
+  font-size: 3rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+  line-height: 1;
+}
+.card-body { flex: 1; }
+.card-tags {
+  display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;
+}
+.tag {
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.tag-adventure { background: rgba(111,174,143,0.2); color: var(--good); border: 1px solid rgba(111,174,143,0.3); }
+.tag-rpg { background: rgba(212,175,106,0.15); color: var(--gold); border: 1px solid rgba(212,175,106,0.3); }
+.tag-action { background: rgba(178,92,92,0.2); color: var(--evil); border: 1px solid rgba(178,92,92,0.3); }
+.tag-new { background: rgba(120,80,200,0.2); color: #b090f0; border: 1px solid rgba(120,80,200,0.3); }
+.tag-puzzle { background: rgba(80,150,200,0.2); color: #80c0f0; border: 1px solid rgba(80,150,200,0.3); }
 
-  @media (max-width:480px){
-    header h1{font-size:1.3rem;}
-    .scene-text{font-size:0.95rem;}
-  }
+.card-title {
+  font-size: 1.25rem;
+  color: var(--gold2);
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+.card-desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+.card-meta {
+  display: flex; gap: 16px;
+  font-size: 0.75rem; color: var(--muted);
+}
+.meta-item { display: flex; align-items: center; gap: 5px; }
+.card-arrow {
+  font-size: 1.4rem;
+  color: rgba(212,175,106,0.4);
+  align-self: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.game-card:hover .card-arrow {
+  color: var(--gold);
+  transform: translateX(-4px);
+}
+
+/* Coming soon card */
+.card-soon {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+.card-soon:hover { transform: none; box-shadow: none; }
+.soon-badge {
+  position: absolute;
+  top: 16px; left: 16px;
+  background: rgba(212,175,106,0.15);
+  border: 1px solid rgba(212,175,106,0.3);
+  color: var(--gold);
+  font-size: 0.65rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 2px;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.75rem;
+  padding-top: 20px;
+  border-top: 1px solid rgba(212,175,106,0.1);
+}
+.footer span { color: var(--gold); }
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(20px); }
+  to { opacity:1; transform: translateY(0); }
+}
+.hero { animation: fadeUp 0.6s ease both; }
+.game-card:nth-child(1) { animation: fadeUp 0.6s 0.1s ease both; }
+.game-card:nth-child(2) { animation: fadeUp 0.6s 0.2s ease both; }
+.game-card:nth-child(3) { animation: fadeUp 0.6s 0.3s ease both; }
+
+@media (max-width: 480px) {
+  .card-icon { font-size: 2.2rem; }
+  .card-title { font-size: 1.1rem; }
+  .card-arrow { display: none; }
+}
 </style>
 </head>
 <body>
-<div class="game" id="game">
+<div class="stars"></div>
+<div class="wrapper">
 
-  <header>
-    <h1>⚔️ سرنوشت آلبیون</h1>
-    <p>یک سفر کوچک، انتخاب‌های بزرگ</p>
-  </header>
-<div class="stats">
-    <div class="stat">
-      <span class="label">جان</span>
-      <span class="val" id="hpVal">30 / 30</span>
-    </div>
-    <div class="stat">
-      <span class="label">طلا</span>
-      <span class="val" id="goldVal">12</span>
-    </div>
-    <div class="stat">
-      <span class="label">شهرت (خیر / شر)</span>
-      <div class="align-bar"><div class="align-fill" id="alignFill"></div></div>
-    </div>
+  <div class="hero">
+    <div class="hero-badge">🎮 پورتال بازی‌های افسانه‌ای</div>
+    <h1>⚔️ دنیای بازی‌ها</h1>
+    <p class="hero-sub">هر بازی یک سفر است — یک انتخاب، هزار سرنوشت</p>
+    <div class="divider"></div>
   </div>
 
-  <div class="scene">
-    <div class="scene-art" id="sceneArt">🏘️</div>
-    <div class="scene-text" id="sceneText">در حال بارگذاری...</div>
-    <div class="log" id="logText"></div>
+  <div class="section-title">بازی‌های موجود</div>
+
+  <div class="games-grid">
+
+    <a class="game-card" href="albion.html">
+      <div class="card-icon">⚔️</div>
+      <div class="card-body">
+        <div class="card-tags">
+          <span class="tag tag-rpg">نقش‌آفرینی</span>
+          <span class="tag tag-adventure">ماجراجویی</span>
+        </div>
+        <div class="card-title">سرنوشت آلبیون</div>
+        <div class="card-desc">یک سفر کوچک، انتخاب‌های بزرگ. تو قهرمانی هستی که باید بین نیکی و شرارت، خرد و شمشیر انتخاب کنی. آیا گرگ نفرین‌شده را نجات می‌دهی یا می‌کشی؟</div>
+        <div class="card-meta">
+          <span class="meta-item">⏱ ۵-۱۰ دقیقه</span>
+          <span class="meta-item">🎭 داستان‌محور</span>
+          <span class="meta-item">⚔️ نبرد تاکتیکی</span>
+        </div>
+      </div>
+      <div class="card-arrow">←</div>
+    </a>
+
+    <a class="game-card" href="dungeon.html">
+      <div class="card-icon">🗝️</div>
+      <div class="card-body">
+        <div class="card-tags">
+          <span class="tag tag-action">اکشن</span>
+          <span class="tag tag-new">جدید</span>
+        </div>
+        <div class="card-title">سیاه‌چال فراموش‌شده</div>
+        <div class="card-desc">عمق زمین، تاریکی مطلق، و موجوداتی که هرگز نباید بیدار می‌شدند. یک قهرمان، یه مشعل، و یک سیاه‌چال پر از رمز و خطر — تا کجا پیش می‌روی؟</div>
+        <div class="card-meta">
+          <span class="meta-item">⏱ ۸-۱۵ دقیقه</span>
+          <span class="meta-item">🗺️ اکتشاف</span>
+          <span class="meta-item">💀 نبرد سخت</span>
+        </div>
+      </div>
+      <div class="card-arrow">←</div>
+    </a>
+
+    <div class="game-card card-soon">
+      <div class="soon-badge">به زودی</div>
+      <div class="card-icon">🌊</div>
+      <div class="card-body">
+        <div class="card-tags">
+          <span class="tag tag-puzzle">معما</span>
+        </div>
+        <div class="card-title">دریای بی‌کران</div>
+        <div class="card-desc">سفری دریایی که هر موج یک معما است. کشتی تو، سرنوشت تو.</div>
+        <div class="card-meta">
+          <span class="meta-item">⏱ ۱۰-۲۰ دقیقه</span>
+          <span class="meta-item">🧩 معما</span>
+        </div>
+      </div>
+      <div class="card-arrow">←</div>
+    </div>
+
   </div>
 
-  <div class="battle" id="battleBox" style="display:none;">
-    <div class="combatant">
-      <div class="icon">🧙</div>
-      <div>تو</div>
-      <div class="hpbar"><div class="hpfill player" id="playerHp" style="width:100%"></div></div>
-    </div>
-    <div class="vs">VS</div>
-    <div class="combatant">
-      <div class="icon" id="enemyIcon">👹</div>
-      <div id="enemyName">دشمن</div>
-      <div class="hpbar"><div class="hpfill" id="enemyHp" style="width:100%"></div></div>
-    </div>
-  </div>
-
-  <div class="choices" id="choices"></div>
-
-  <footer>هر انتخاب مسیر داستان و شخصیت تو را شکل می‌دهد</footer>
+  <div class="footer">ساخته شده با ❤️ &nbsp;|&nbsp; هر انتخاب مسیر داستان را شکل می‌دهد &nbsp;|&nbsp; <span>v1.0</span></div>
 </div>
-
-<script>
-const state = {
-  hp: 30, maxHp: 30,
-  gold: 12,
-  alignment: 0, // -100 (شر) تا +100 (خیر)
-  scene: 'start',
-  enemyHp: 0, enemyMax: 0
-};
-
-const els = {
-  hpVal: document.getElementById('hpVal'),
-  goldVal: document.getElementById('goldVal'),
-  alignFill: document.getElementById('alignFill'),
-  sceneArt: document.getElementById('sceneArt'),
-  sceneText: document.getElementById('sceneText'),
-  logText: document.getElementById('logText'),
-  choices: document.getElementById('choices'),
-  battleBox: document.getElementById('battleBox'),
-  playerHp: document.getElementById('playerHp'),
-  enemyHp: document.getElementById('enemyHp'),
-  enemyName: document.getElementById('enemyName'),
-  enemyIcon: document.getElementById('enemyIcon'),
-  game: document.getElementById('game')
-};
-
-function updateStats(){
-  els.hpVal.textContent = `${state.hp} / ${state.maxHp}`;
-  els.goldVal.textContent = state.gold;
-  const pct = (state.alignment + 100) / 2; // 0..100
-  els.alignFill.style.width = pct + '%';
-  let color = '#9aab95';
-  if(state.alignment > 25) color = 'var(--good)';
-  else if(state.alignment < -25) color = 'var(--evil)';
-  els.alignFill.style.background = color;
-}
-
-function setScene(art, text, log){
-  els.sceneArt.textContent = art;
-  els.sceneText.textContent = text;
-  els.logText.textContent = log || '';
-  els.battleBox.style.display = 'none';
-}
-
-function setChoices(list){
-  els.choices.innerHTML = '';
-  list.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'choice-btn';
-    if(c.tag){
-      const tag = document.createElement('span');
-      tag.className = 'choice-tag';
-      tag.textContent = c.tag;
-      btn.appendChild(tag);
-    }
-    const txt = document.createElement('span');
-    txt.textContent = c.text;
-    btn.appendChild(txt);
-    if(c.disabled){
-      btn.disabled = true;
-    }
-    btn.onclick = () => c.action();
-    els.choices.appendChild(btn);
-  });
-  updateStats();
-}
-
-function shakeGame(){
-  els.game.classList.add('hit');
-  setTimeout(()=>els.game.classList.remove('hit'), 250);
-}
-
-// ============ SCENES ============
-
-function sceneStart(){
-  setScene('🏘️', 'تو یک پرنده‌ی جوان از روستای کوچک "آذرتل" هستی. خبر رسیده که یک گرگ غول‌پیکر مزرعه‌ها را تهدید می‌کند، و گروهی از مزدوران در جاده‌ی اصلی از یک پیرمرد گدا طلب پول می‌کنند.', '');
-  setChoices([
-    {text:'به سوی جاده‌ی اصلی برو (مزدوران و گدا)', action: sceneBeggar},
-    {text:'مستقیم به سمت جنگل برو و گرگ را شکار کن', action: sceneForestEntry},
-    {text:'وارد میخانه‌ی روستا شو و گوش بده', action: sceneTavern}
-  ]);
-}
-function sceneTavern(){
-  setScene('🍺', 'میخانه پر از پچ‌پچ است. یکی می‌گوید گرگ در واقع یک شکارچی نفرین‌شده است که زمانی انسان بوده. دیگری می‌گوید طلسم شکستن آن نیاز به یک "نوای نقره‌ای" دارد که در غار پشت آبشار پنهان شده.', 'دانش جدید: یک سرنخ درباره‌ی طلسم گرگ به دست آوردی.');
-  setChoices([
-    {text:'برو سمت جاده‌ی اصلی', action: sceneBeggar},
-    {text:'مستقیم به جنگل برو', action: sceneForestEntry},
-    {text:'به دنبال آبشار و غار باش', action: sceneCave}
-  ]);
-}
-
-function sceneBeggar(){
-  setScene('🧓', 'یک پیرمرد گدا روی زانو افتاده. سه مزدور با شمشیر او را محاصره کرده‌اند و می‌خندند، در حالی که کیف پولش را گرفته‌اند.', '');
-  setChoices([
-    {tag:'✨ نیکی', text:'به مزدوران حمله کن و پیرمرد را نجات بده', action: ()=>startBattle('mercenary', sceneBeggarWin, '⚔️')},
-    {tag:'😈 شرارت', text:'وقتی مشغول‌اند، کیف پول دیگری از جیب پیرمرد بدزد و برو', action: sceneBeggarSteal},
-    {text:'بی‌تفاوت رد شو', action: ()=>{
-      state.alignment -= 5;
-      sceneForestEntry();
-    }}
-  ]);
-}
-
-function sceneBeggarWin(){
-  state.alignment += 20;
-  state.gold += 5;
-  setScene('🙏', 'پیرمرد با چشمانی پر از اشک از تو تشکر می‌کند و یک سکه‌ی نقره‌ای به تو می‌دهد. می‌گوید این سکه روزی به کارت می‌آید. (+۵ طلا، شهرت نیک افزایش یافت)', 'مزدوران فرار کردند.');
-  setChoices([
-    {text:'به سمت جنگل برو', action: sceneForestEntry},
-    {text:'درباره‌ی گرگ از پیرمرد بپرس', action: sceneCaveHintFromBeggar}
-  ]);
-}
-
-function sceneCaveHintFromBeggar(){
-  setScene('🗺️', 'پیرمرد می‌گوید: "گرگ زمانی برادر من بود. تنها راه نجاتش، نوای نقره‌ای در غار پشت آبشار است. لطفاً... نکُشش."', 'هدف جدید: غار پشت آبشار');
-  setChoices([
-    {text:'به سمت غار برو', action: sceneCave},
-    {text:'مستقیم به جنگل برو', action: sceneForestEntry}
-  ]);
-}
-
-function sceneBeggarSteal(){
-  state.alignment -= 20;
-  state.gold += 8;
-  setScene('💰', 'به آرامی کیف پول دوم را برمی‌داری و در سایه‌ها ناپدید می‌شوی. (+۸ طلا، شهرت شر افزایش یافت). صدای فریاد پیرمرد را پشت سرت می‌شنوی.', '');
-  setChoices([
-    {text:'به سمت جنگل برو', action: sceneForestEntry}
-  ]);
-}
-
-function sceneCave(){
-  setScene('🌊', 'پشت آبشار، غاری تاریک پیدا می‌کنی. روی دیوار، یک "نای نقره‌ای" کهنه آویزان است. برداشتنش به تو قدرت می‌دهد تا طلسم گرگ را بشکنی بدون اینکه او را بکشی.', 'آیتم به‌دست‌آمده: نای نقره‌ای');
-  state.hasFlute = true;
-  setChoices([
-    {text:'نای را بردار و به جنگل برو', action: sceneForestEntry}
-  ]);
-}
-
-function sceneForestEntry(){
-  setScene('🌲', 'جنگل تاریک و ساکت است. صدای نفس‌های سنگین گرگ غول‌پیکر را از پشت درختان می‌شنوی. چشمانش قرمز می‌درخشد.', '');
-  let choices = [
-    {text:'با شمشیر به گرگ حمله کن', action: ()=>startBattle('wolf', sceneWolfDefeated, '🐺')}
-  ];
-  if(state.hasFlute){
-    choices.unshift({tag:'✨ نیکی - نای نقره‌ای', text:'نای نقره‌ای را بنواز تا طلسم را بشکنی', action: sceneWolfSaved});
-  }
-  choices.push({text:'فرار کن و به روستا برگرد', action: ()=>{
-    state.alignment -= 2;
-    setScene('🏃', 'تصمیم می‌گیری فعلاً عقب‌نشینی کنی. گرگ همچنان روستا را تهدید می‌کند... شاید وقت دیگری.', 'پایان این بخش از داستان.');
-    setChoices([{text:'دوباره شروع کن', action: sceneStart}]);
-  }});
-  setScene('🌲', 'جنگل تاریک و ساکت است. صدای نفس‌های سنگین گرگ غول‌پیکر را از پشت درختان می‌شنوی. چشمانش قرمز می‌درخشد.', '');
-  setChoices(choices);
-}
-
-function sceneWolfSaved(){
-  state.alignment += 30;
-  setScene('✨', 'نای نقره‌ای آهنگی غمگین و درخشان می‌نوازد. نور سفیدی گرگ را در بر می‌گیرد و او دوباره به شکل یک انسان - یک شکارچی پیر - باز می‌گردد. او با شرم سر تکان می‌دهد و به سوی روستا می‌رود تا عذرخواهی کند.', 'پایان نیک: تو یک قهرمان حقیقی شدی. هیچ خونی ریخته نشد.');
-  showEnding('قهرمان رحیم', '🕊️');
-}
-
-function sceneWolfDefeated(){
-  state.alignment += 10;
-  state.gold += 15;
-  setScene('🏆', 'گرگ غول‌پیکر بر زمین می‌افتد. روستا از تهدید نجات یافت، اما داستان آن شکارچی نفرین‌شده برای همیشه ناتمام ماند. مردم تو را به عنوان "کشنده‌ی گرگ" می‌شناسند. (+۱۵ طلا)', 'پایان: کشنده‌ی گرگ');
-  showEnding('کشنده‌ی گرگ', '⚔️');
-}
-function showEnding(title, icon){
-  setTimeout(()=>{
-    let alignText = 'میانه‌رو';
-    if(state.alignment > 30) alignText = 'نیک‌نهاد';
-    else if(state.alignment < -30) alignText = 'سیاه‌دل';
-    els.logText.textContent = `پایان داستان — لقب تو: ${icon} ${title} (${alignText}) | طلای نهایی: ${state.gold}`;
-    setChoices([
-      {text:'بازی را از نو شروع کن', action: ()=>{
-        state.hp = 30; state.gold = 12; state.alignment = 0; state.hasFlute = false;
-        sceneStart();
-      }}
-    ]);
-  }, 400);
-}
-
-// ============ BATTLE SYSTEM ============
-const enemies = {
-  mercenary: {name:'مزدور', icon:'🗡️', hp:18, dmg:4},
-  wolf: {name:'گرگ نفرین‌شده', icon:'🐺', hp:35, dmg:7}
-};
-
-let onWin = null;
-
-function startBattle(type, winCallback, icon){
-  const e = enemies[type];
-  state.enemyHp = e.hp;
-  state.enemyMax = e.hp;
-  state.enemyType = type;
-  onWin = winCallback;
-  els.enemyName.textContent = e.name;
-  els.enemyIcon.textContent = icon || e.icon;
-  els.battleBox.style.display = 'flex';
-  els.playerHp.style.width = (state.hp/state.maxHp*100) + '%';
-  els.enemyHp.style.width = '100%';
-  els.sceneArt.textContent = '⚔️';
-  els.sceneText.textContent = `${e.name} به سمت تو حمله می‌کند! آماده‌ی نبرد شو.`;
-  els.logText.textContent = '';
-  setChoices([
-    {text:'حمله کن', action: attackEnemy},
-    {text:'دفاع کن (کاهش آسیب بعدی)', action: defend}
-  ]);
-}
-
-let defending = false;
-
-function attackEnemy(){
-  const e = enemies[state.enemyType];
-  const dmg = Math.floor(Math.random()*8)+5;
-  state.enemyHp -= dmg;
-  els.logText.textContent = `تو ${dmg} آسیب وارد کردی!`;
-  shakeGame();
-
-  if(state.enemyHp <= 0){
-    els.enemyHp.style.width = '0%';
-    state.enemyHp = 0;
-    setTimeout(onWin, 600);
-    return;
-  }
-  els.enemyHp.style.width = Math.max(0,(state.enemyHp/state.enemyMax*100)) + '%';
-
-  enemyTurn(e);
-}
-
-function defend(){
-  defending = true;
-  els.logText.textContent = 'تو در حالت دفاعی قرار گرفتی...';
-  const e = enemies[state.enemyType];
-  enemyTurn(e);
-}
-
-function enemyTurn(e){
-  setTimeout(()=>{
-    let dmg = Math.floor(Math.random()*e.dmg)+2;
-    if(defending){ dmg = Math.floor(dmg/2); defending=false; }
-    state.hp -= dmg;
-    if(state.hp < 0) state.hp = 0;
-    els.playerHp.style.width = (state.hp/state.maxHp*100) + '%';
-    els.logText.textContent += ` | ${e.name} ${dmg} آسیب به تو زد.`;
-    shakeGame();
-    updateStats();
-
-    if(state.hp <= 0){
-      setTimeout(()=>{
-        setScene('💀', 'دیدت تار می‌شود... سفر تو در اینجا به پایان رسید. اما افسانه‌ها همیشه راه دومی دارند.', 'پایان: شکست');
-        setChoices([
-          {text:'دوباره شروع کن', action: ()=>{
-            state.hp = 30; state.gold = 12; state.alignment = 0; state.hasFlute = false;
-            sceneStart();
-          }}
-        ]);
-      }, 500);
-      return;
-    }
-
-    setChoices([
-      {text:'حمله کن', action: attackEnemy},
-      {text:'دفاع کن (کاهش آسیب بعدی)', action: defend}
-    ]);
-  }, 500);
-}
-
-// init
-state.hasFlute = false;
-sceneStart();
-updateStats();
-</script>
-<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "9a970ab0ca554f6aa85b1b61cd243a2f"}'></script><!-- End Cloudflare Web Analytics -->
+ <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "9a970ab0ca554f6aa85b1b61cd243a2f"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
