@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سیاه‌چال فراموش‌شده</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --bg: #12111a;
+    --panel: #1c1b28;
+    --gold: #c8a96a;
+    --good: #6fae8f;
+    --evil: #b25c5c;
+    --ink: #f0e9da;
+    --muted: #8a8fa8;
+    --purple: #9b72cf;
+    --fire: #e07b39;
+  }
+  body{
+    font-family: 'Georgia', serif;
+    background: radial-gradient(circle at 50% 0%, #1e1830, var(--bg));
+    color: var(--ink);
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding: 20px;
+  }
+  .game{
+    width:100%; max-width:640px;
+    background: var(--panel);
+    border: 2px solid rgba(200,169,106,0.5);
+    border-radius: 14px;
+    box-shadow: 0 0 60px rgba(0,0,0,0.7), inset 0 0 80px rgba(155,114,207,0.04);
+    overflow:hidden;
+  }
+  header{
+    text-align:center;
+    padding: 22px 16px 14px;
+    border-bottom: 2px solid rgba(200,169,106,0.2);
+    background: linear-gradient(180deg, rgba(155,114,207,0.08), transparent);
+  }
+  header h1{
+    font-size: 1.6rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+  }
+  header p{ color: var(--muted); font-size:0.85rem; margin-top:4px; }
+
+  .stats{
+    display:flex; justify-content:space-around;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(200,169,106,0.12);
+    font-size: 0.9rem;
+  }
+  .stat{ text-align:center; }
+  .stat .label{ color: var(--muted); font-size:0.7rem; display:block; }
+  .stat .val{ font-weight:bold; }
+  .torch-bar{
+    height:6px; border-radius:3px; background:#0e0e18; margin-top:4px; overflow:hidden; width:80px;
+  }
+  .torch-fill{
+    height:100%; background: linear-gradient(90deg, var(--fire), #f5c842);
+    transition: width 0.4s;
+  }
+
+  .scene{
+    padding: 22px;
+    min-height: 220px;
+  }
+  .scene-art{
+    text-align:center; font-size:3rem; margin-bottom:14px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+  }
+  .scene-text{
+    line-height:1.9; font-size:1.02rem; min-height: 80px;
+  }
+  .log{
+    font-size:0.8rem; color: var(--muted); margin-top:10px; font-style:italic; min-height:1.2em;
+  }
+
+  .choices{
+    display:flex; flex-direction:column; gap:10px;
+    padding: 0 22px 22px;
+  }
+  .choice-btn{
+    background: #14131f;
+    border: 1px solid rgba(200,169,106,0.3);
+    color: var(--ink);
+    padding: 14px 16px;
+    border-radius: 8px;
+    text-align: right;
+    font-size: 0.98rem;
+    cursor:pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .choice-btn:hover{
+    background: rgba(155,114,207,0.12);
+    border-color: var(--purple);
+    transform: translateX(-3px);
+  }
+  .choice-btn:disabled{
+    opacity:0.35; cursor:not-allowed; transform:none;
+  }
+  .choice-tag{
+    font-size:0.7rem; color: var(--gold); display:block; margin-bottom:4px; letter-spacing:1px;
+  }
+
+  .battle{
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 0 22px 16px;
+  }
+  .combatant{ text-align:center; width:40%; }
+  .combatant .icon{ font-size:2.5rem; }
+  .hpbar{ height:10px; background:#0e0e18; border-radius:5px; overflow:hidden; margin-top:6px; border:1px solid rgba(200,169,106,0.2); }
+  .hpfill{ height:100%; background: var(--evil); transition: width 0.3s; }
+  .hpfill.player{ background: var(--good); }
+  .vs{ color: var(--gold); font-size:1.4rem; }
+
+  .map-grid{
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    padding: 12px 22px;
+    border-bottom: 1px solid rgba(200,169,106,0.1);
+  }
+  .map-cell{
+    height: 28px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    background: #0e0e18;
+    border: 1px solid rgba(200,169,106,0.08);
+    transition: all 0.3s;
+  }
+  .map-cell.visited{ background: #1a1a2e; border-color: rgba(200,169,106,0.2); }
+  .map-cell.current{ background: rgba(200,169,106,0.15); border-color: var(--gold); }
+  .map-cell.hidden{ opacity:0.2; }
+
+  footer{
+    text-align:center; padding: 10px; font-size:0.7rem; color: var(--muted);
+    border-top: 1px solid rgba(200,169,106,0.12);
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+
+  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+  .hit{ animation: shake 0.25s; }
+  @keyframes flicker { 0%,100%{opacity:1;} 50%{opacity:0.85;} }
+  .scene-art{ animation: flicker 3s infinite; }
+
+  @media (max-width:480px){
+    header h1{font-size:1.3rem;}
+    .scene-text{font-size:0.95rem;}
+  }
+</style>
+</head>
+<body>
+<div class="game" id="game">
+
+  <header>
+    <h1>🗝️ سیاه‌چال فراموش‌شده</h1>
+    <p>نور مشعلت رو به اتمام است — با عجله باش</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="label">جان</span>
+      <span class="val" id="hpVal">25 / 25</span>
+    </div>
+    <div class="stat">
+      <span class="label">مشعل</span>
+      <div class="torch-bar"><div class="torch-fill" id="torchFill"></div></div>
+    </div>
+    <div class="stat">
+      <span class="label">کلیدها</span>
+      <span class="val" id="keysVal">🗝️ ۰</span>
+    </div>
+    <div class="stat">
+      <span class="label">طبقه</span>
+      <span class="val" id="floorVal">B1</span>
+    </div>
+  </div>
+
+  <div class="map-grid" id="mapGrid"></div>
+
+  <div class="scene">
+    <div class="scene-art" id="sceneArt">🚪</div>
+    <div class="scene-text" id="sceneText">در حال بارگذاری...</div>
+    <div class="log" id="logText"></div>
+  </div>
+
+  <div class="battle" id="battleBox" style="display:none;">
+    <div class="combatant">
+      <div class="icon">🧙</div>
+      <div>تو</div>
+      <div class="hpbar"><div class="hpfill player" id="playerHp" style="width:100%"></div></div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="combatant">
+      <div class="icon" id="enemyIcon">👹</div>
+      <div id="enemyName">دشمن</div>
+      <div class="hpbar"><div class="hpfill" id="enemyHp" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="choices" id="choices"></div>
+
+  <footer>
+    <a href="index.html" style="color:var(--muted);font-size:0.75rem;text-decoration:none;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">← بازگشت به لابی</a>
+    <span>هر اتاق رازی دارد — هر راهرو خطری</span>
+  </footer>
+</div>
+
+<script>
+const state = {
+  hp: 25, maxHp: 25,
+  torch: 100, // 0..100
+  keys: 0,
+  floor: 1,
+  room: 0, // 0..4 = 5 rooms per floor
+  enemyHp: 0, enemyMax: 0,
+  enemyType: null,
+  hasRope: false,
+  hasPotionUsed: false,
+  visitedRooms: new Set([0]),
+};
+
+const els = {
+  hpVal: document.getElementById('hpVal'),
+  torchFill: document.getElementById('torchFill'),
+  keysVal: document.getElementById('keysVal'),
+  floorVal: document.getElementById('floorVal'),
+  sceneArt: document.getElementById('sceneArt'),
+  sceneText: document.getElementById('sceneText'),
+  logText: document.getElementById('logText'),
+  choices: document.getElementById('choices'),
+  battleBox: document.getElementById('battleBox'),
+  playerHp: document.getElementById('playerHp'),
+  enemyHp: document.getElementById('enemyHp'),
+  enemyName: document.getElementById('enemyName'),
+  enemyIcon: document.getElementById('enemyIcon'),
+  mapGrid: document.getElementById('mapGrid'),
+  game: document.getElementById('game'),
+};
+
+function updateStats(){
+  els.hpVal.textContent = `${state.hp} / ${state.maxHp}`;
+  els.torchFill.style.width = state.torch + '%';
+  els.keysVal.textContent = `🗝️ ${state.keys}`;
+  els.floorVal.textContent = `B${state.floor}`;
+  renderMap();
+}
+
+function burnTorch(amount){
+  state.torch = Math.max(0, state.torch - amount);
+}
+
+function renderMap(){
+  els.mapGrid.innerHTML = '';
+  for(let i = 0; i < 5; i++){
+    const cell = document.createElement('div');
+    cell.className = 'map-cell';
+    if(i === state.room) { cell.className += ' current'; cell.textContent = '🔦'; }
+    else if(state.visitedRooms.has(i)) { cell.className += ' visited'; cell.textContent = ['🚪','⚔️','💀','🗺️','🔒'][i] || '✓'; }
+    else { cell.className += ' hidden'; cell.textContent = '?'; }
+    els.mapGrid.appendChild(cell);
+  }
+}
+
+function setScene(art, text, log){
+  els.sceneArt.textContent = art;
+  els.sceneText.textContent = text;
+  els.logText.textContent = log || '';
+  els.battleBox.style.display = 'none';
+}
+
+function setChoices(list){
+  els.choices.innerHTML = '';
+  list.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    if(c.tag){
+      const tag = document.createElement('span');
+      tag.className = 'choice-tag';
+      tag.textContent = c.tag;
+      btn.appendChild(tag);
+    }
+    const txt = document.createElement('span');
+    txt.textContent = c.text;
+    btn.appendChild(txt);
+    if(c.disabled) btn.disabled = true;
+    btn.onclick = () => c.action();
+    els.choices.appendChild(btn);
+  });
+  updateStats();
+}
+
+function shakeGame(){
+  els.game.classList.add('hit');
+  setTimeout(()=>els.game.classList.remove('hit'), 250);
+}
+
+function goRoom(r){
+  state.room = r;
+  state.visitedRooms.add(r);
+  burnTorch(8);
+}
+
+// ============ FLOOR 1 ROOMS ============
+
+function roomEntrance(){
+  goRoom(0);
+  setScene('🚪','در کهنه‌ای پشت سرت بسته می‌شود. هوای سرد و بوی خاک قدیمی در ریه‌هایت می‌پیچد. مشعل کوچکی در دستت لرزان است. سه راهرو پیشت است: چپ، راست، و مستقیم.', 'مشعل: ۱۰۰٪');
+  setChoices([
+    {text:'به راهروی چپ برو (صدای آب می‌آید)', action: roomWater},
+    {text:'مستقیم برو (بوی دود می‌آید)', action: roomFire},
+    {text:'به راهروی راست برو (سکوت مطلق)', action: roomSilence},
+  ]);
+}
+
+function roomWater(){
+  goRoom(1);
+  burnTorch(5);
+  setScene('💧','یک حوضچه‌ی زیرزمینی آرام می‌درخشد. ماهی‌های کور در آب شناورند. روی لبه‌ی حوضچه یک کیسه‌ی چرم یافتی — داخلش یک طناب بلند و یک کوزه‌ی مایع درخشان (داروی درمان) است.','آیتم: طناب + داروی درمان');
+  state.hasRope = true;
+  const choices = [
+    {text:'مایع درخشان را بنوش (جان +۱۰)', action: ()=>{
+      if(!state.hasPotionUsed){
+        state.hp = Math.min(state.maxHp, state.hp + 10);
+        state.hasPotionUsed = true;
+        els.logText.textContent = 'درمان شدی! جان +'+ 10;
+        updateStats();
+        setTimeout(()=> afterWater(), 600);
+      }
+    }, disabled: state.hasPotionUsed},
+    {text:'طناب را بردار و به ادامه برو', action: afterWater},
+  ];
+  if(state.hasPotionUsed) choices[0].disabled = true;
+  setChoices(choices);
+}
+
+function afterWater(){
+  setScene('💧','حوضچه آرام می‌درخشد. مسیر ادامه دارد.','');
+  setChoices([
+    {text:'به اتاق میانی برو', action: roomMiddle},
+    {text:'به ورودی برگرد و راهروی دیگر را انتخاب کن', action: roomEntrance},
+  ]);
+}
+
+function roomFire(){
+  goRoom(2);
+  burnTorch(5);
+  setScene('🔥','یک محراب قدیمی با شعله‌های بنفش می‌سوزد. روی دیوار نوشته: "آنچه می‌ترسی بده، آنچه می‌خواهی بگیر." یک جعبه طلا کنار محراب است — اما سایه‌ای نیز در گوشه حرکت می‌کند.', '');
+  setChoices([
+    {tag:'⚠️ خطر', text:'جعبه را بردار (سایه بیدار می‌شود)', action: ()=> startBattle('shadow', afterFireWin, '👤')},
+    {text:'به محراب احترام بگذار و برو', action: ()=>{
+      state.torch = Math.min(100, state.torch + 20);
+      setScene('✨','شعله‌های بنفش به سمت مشعل تو می‌آیند و آن را پر می‌کنند. مشعل قوی‌تر شد! (+۲۰ مشعل)','');
+      setChoices([{text:'به اتاق میانی برو', action: roomMiddle}]);
+      updateStats();
+    }},
+    {text:'فرار کن', action: roomEntrance},
+  ]);
+}
+
+function afterFireWin(){
+  state.keys += 1;
+  setScene('🔑','سایه محو می‌شود و جعبه باز می‌شود — داخلش یک کلید زرین است!','کلید به دست آمد: +۱');
+  setChoices([{text:'به اتاق میانی برو', action: roomMiddle}]);
+  updateStats();
+}
+
+function roomSilence(){
+  goRoom(3);
+  burnTorch(5);
+  setScene('😶','سکوت چنان عمیق است که ضربان قلبت را می‌شنوی. روی زمین نقشه‌ای کنده‌کاری شده — این سیاه‌چال سه طبقه دارد. در آخرین طبقه، "گنج گمشده‌ی آلوریا" نهفته است.', 'دانش: نقشه‌ی سیاه‌چال پیدا شد!');
+  setChoices([
+    {text:'با دانش جدید به اتاق میانی برو', action: roomMiddle},
+    {text:'به ورودی برگرد', action: roomEntrance},
+  ]);
+}
+
+function roomMiddle(){
+  goRoom(2);
+  burnTorch(8);
+  if(state.torch <= 0){
+    darkDeath();
+    return;
+  }
+  setScene('⚔️','یک غول کوچک — "گابلین نگهبان" — با چشمانی درخشان جلوی راه را گرفته. در قفل‌شده‌ای پشت سرش به طبقه‌ی دوم منتهی می‌شود.', '');
+  setChoices([
+    {text:'با گابلین بجنگ', action: ()=>startBattle('goblin', roomAfterMiddle, '👺')},
+    {tag:'🗝️ نیاز به کلید', text:'از کلید استفاده کن و بی‌جنگ رد شو', action: ()=>{
+      if(state.keys > 0){
+        state.keys--;
+        roomAfterMiddle();
+      } else {
+        els.logText.textContent = 'کلید نداری! باید بجنگی.';
+      }
+    }, disabled: state.keys < 1},
+    {tag:'🪢 نیاز به طناب', text:'با طناب از بالای سر گابلین رد شو', action: ()=>{
+      if(state.hasRope){
+        burnTorch(5);
+        roomAfterMiddle();
+      } else {
+        els.logText.textContent = 'طناب نداری!';
+      }
+    }, disabled: !state.hasRope},
+  ]);
+}
+
+function roomAfterMiddle(){
+  setScene('🚪','عبور کردی! در قفل‌شده باز است. پله‌هایی رو به پایین ادامه می‌دهند — B2 منتظر است.', '');
+  setChoices([
+    {text:'به طبقه‌ی دوم برو', action: floor2Entry},
+    {text:'برگرد و اتاق‌های باقی‌مانده را کاوش کن', action: roomEntrance},
+  ]);
+}
+
+// ============ FLOOR 2 ============
+function floor2Entry(){
+  state.floor = 2;
+  state.room = 0;
+  state.visitedRooms.clear();
+  state.visitedRooms.add(0);
+  burnTorch(10);
+  if(state.torch <= 0){ darkDeath(); return; }
+  setScene('🕸️','B2 سردتر و تاریک‌تر از B1 است. عنکبوت‌های غول‌آسا تار تنیده‌اند. دو مسیر وجود دارد: "اتاق استخوان‌ها" و "مسیر باد".', 'مشعل دارد کم می‌شود...');
+  updateStats();
+  setChoices([
+    {text:'به اتاق استخوان‌ها برو', action: roomBones},
+    {text:'مسیر باد را دنبال کن', action: roomWind},
+  ]);
+}
+
+function roomBones(){
+  goRoom(1);
+  burnTorch(8);
+  setScene('💀','کف پر از استخوان است. در میانه، یک اسکلت شوالیه برخاسته — اما مشخص است که محافظ یک صندوق است، نه دشمن. صندوق قفل ندارد.','');
+  setChoices([
+    {text:'صندوق را باز کن', action: ()=>{
+      state.hp = Math.min(state.maxHp, state.hp + 8);
+      state.keys++;
+      setScene('🏺','داخل صندوق: یک شیشه‌ی دیگر داروی درمان (+۸ جان) و یک کلید نقره‌ای! شوالیه‌ی اسکلت سرش را تکان می‌دهد.','کلید نقره‌ای یافت شد!');
+      setChoices([{text:'به مسیر اصلی برگرد', action: roomWind}]);
+      updateStats();
+    }},
+    {text:'بدون لمس از کنارش رد شو', action: roomWind},
+  ]);
+}
+
+function roomWind(){
+  goRoom(3);
+  burnTorch(8);
+  if(state.torch <= 0){ darkDeath(); return; }
+  setScene('🌬️','باد سردی از شکافی در دیوار می‌آید — آن سوی شکاف، نور کوچکی می‌درخشد. اینجاست: "نگهبان آخر" — یک اژدهای کوچک که جلوی در نهایی خوابیده.','نگهبان آخر!');
+  setChoices([
+    {text:'با اژدها بجنگ', action: ()=>startBattle('dragon', finalRoom, '🐉')},
+    {tag:'🔑 نیاز به کلید', text:'کلید نقره را در قفل سری بزن و رد شو', action: ()=>{
+      if(state.keys > 0){
+        state.keys--;
+        updateStats();
+        finalRoom();
+      } else {
+        els.logText.textContent = 'کلید نقره‌ای لازم داری!';
+      }
+    }, disabled: state.keys < 1},
+  ]);
+}
+
+function finalRoom(){
+  goRoom(4);
+  state.visitedRooms.add(4);
+  setScene('✨','در باز می‌شود. یک اتاق کوچک با نور طلایی — در مرکز، "گنج گمشده‌ی آلوریا": یک جام پر از سنگ‌های قیمتی و یک طومار باستانی.', '');
+  showEnding();
+}
+
+function showEnding(){
+  let title, icon;
+  if(state.torch > 50 && state.hp > 15){
+    title = 'کاشف افسانه‌ای'; icon = '🏆';
+  } else if(state.keys > 0){
+    title = 'دزد باهوش سیاه‌چال'; icon = '🗝️';
+  } else {
+    title = 'بازمانده‌ی تاریکی'; icon = '🕯️';
+  }
+  setTimeout(()=>{
+    els.logText.textContent = `پایان — لقب تو: ${icon} ${title} | جان: ${state.hp} | مشعل: ${state.torch}٪`;
+    setChoices([{text:'دوباره بازی کن', action: restartGame}]);
+  }, 500);
+}
+
+function darkDeath(){
+  setScene('🌑','مشعل خاموش شد. تاریکی مطلق. صدای چیزی از پشت سرت می‌آید... و دیگر هیچ.', 'پایان: بلعیده‌ی تاریکی');
+  setChoices([{text:'دوباره شروع کن', action: restartGame}]);
+}
+
+function restartGame(){
+  state.hp = 25; state.maxHp = 25;
+  state.torch = 100; state.keys = 0;
+  state.floor = 1; state.room = 0;
+  state.enemyHp = 0; state.hasRope = false;
+  state.hasPotionUsed = false;
+  state.visitedRooms = new Set([0]);
+  roomEntrance();
+}
+
+// ============ BATTLE SYSTEM ============
+const enemies = {
+  shadow: {name:'سایه‌ی تاریک', icon:'👤', hp:20, dmg:5},
+  goblin: {name:'گابلین نگهبان', icon:'👺', hp:15, dmg:4},
+  dragon: {name:'اژدهای کوچک', icon:'🐉', hp:30, dmg:8},
+};
+
+let onWin = null;
+let defending = false;
+
+function startBattle(type, winCallback, icon){
+  const e = enemies[type];
+  state.enemyHp = e.hp;
+  state.enemyMax = e.hp;
+  state.enemyType = type;
+  onWin = winCallback;
+  els.enemyName.textContent = e.name;
+  els.enemyIcon.textContent = icon || e.icon;
+  els.battleBox.style.display = 'flex';
+  els.playerHp.style.width = (state.hp/state.maxHp*100) + '%';
+  els.enemyHp.style.width = '100%';
+  els.sceneArt.textContent = '⚔️';
+  els.sceneText.textContent = `${e.name} جلوی راه را گرفت! آماده‌ی نبرد باش.`;
+  els.logText.textContent = '';
+  burnTorch(5);
+  setChoices([
+    {text:'حمله‌ی سریع', action: attackEnemy},
+    {text:'دفاع کن (کاهش آسیب بعدی)', action: defend},
+  ]);
+}
+
+function attackEnemy(){
+  const e = enemies[state.enemyType];
+  const dmg = Math.floor(Math.random()*9)+4;
+  state.enemyHp -= dmg;
+  els.logText.textContent = `تو ${dmg} آسیب وارد کردی!`;
+  shakeGame();
+  if(state.enemyHp <= 0){
+    els.enemyHp.style.width = '0%';
+    setTimeout(onWin, 600);
+    return;
+  }
+  els.enemyHp.style.width = Math.max(0,(state.enemyHp/state.enemyMax*100)) + '%';
+  enemyTurn(e);
+}
+
+function defend(){
+  defending = true;
+  els.logText.textContent = 'در حالت دفاعی...';
+  const e = enemies[state.enemyType];
+  enemyTurn(e);
+}
+
+function enemyTurn(e){
+  setTimeout(()=>{
+    let dmg = Math.floor(Math.random()*e.dmg)+2;
+    if(defending){ dmg = Math.floor(dmg/2); defending=false; }
+    state.hp -= dmg;
+    if(state.hp < 0) state.hp = 0;
+    els.playerHp.style.width = (state.hp/state.maxHp*100) + '%';
+    els.logText.textContent += ` | ${e.name} ${dmg} آسیب زد.`;
+    shakeGame();
+    updateStats();
+
+    if(state.hp <= 0){
+      setTimeout(()=>{
+        setScene('💀','در تاریکی سیاه‌چال جانت را از دست دادی. اما اسرار این مکان هنوز منتظر کشف‌اند...','پایان: کشته شدی');
+        setChoices([{text:'دوباره شروع کن', action: restartGame}]);
+      }, 500);
+      return;
+    }
+
+    setChoices([
+      {text:'حمله‌ی سریع', action: attackEnemy},
+      {text:'دفاع کن', action: defend},
+    ]);
+  }, 500);
+}
+
+// init
+roomEntrance();
+updateStats();
+</script>
+</body>
+</html>
